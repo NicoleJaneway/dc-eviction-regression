@@ -127,7 +127,7 @@ def create_demo_col(df):
     return df
 
 def count_puds(df):
-    df = df[['GEOID','year','name','population', 'poverty-rate', 'renter-occupied-households',
+    df_count = df[['GEOID','year','name','population', 'poverty-rate', 'renter-occupied-households',
        'pct-renter-occupied', 'median-gross-rent', 'median-household-income',
        'median-property-value', 'rent-burden', 'pct-white', 'pct-af-am',
        'pct-hispanic', 'pct-am-ind', 'pct-asian', 'pct-nh-pi', 'pct-multiple',
@@ -148,5 +148,33 @@ def count_puds(df):
        'FAGI_MEDIAN_2011', 'FAGI_TOTAL_2012', 'FAGI_MEDIAN_2012',
        'FAGI_TOTAL_2014', 'FAGI_MEDIAN_2014', 'FAGI_TOTAL_2015',
        'FAGI_MEDIAN_2015', 'geometry_Tract', 'ward']).count().reset_index()
-    df.rename(columns={'PUD_NAME':'pud_count'}, inplace=True) 
-    return df
+    df_count.rename(columns={'PUD_NAME':'pud_count'}, inplace=True)
+    
+    return df_count
+
+# TODO: update above to agg_puds function by adding in below and then merging on index columns
+
+def avg_puds(df):
+    df_avg = df[['GEOID','year','name','population', 'poverty-rate', 'renter-occupied-households',
+       'pct-renter-occupied', 'median-gross-rent', 'median-household-income',
+       'median-property-value', 'rent-burden', 'pct-white', 'pct-af-am',
+       'pct-hispanic', 'pct-am-ind', 'pct-asian', 'pct-nh-pi', 'pct-multiple',
+       'pct-other', 'pct-non-white', 'eviction-filings', 'evictions',
+       'eviction-rate', 'eviction-filing-rate', 'low-flag', 'imputed',
+       'subbed', 'OBJECTID', 'TRACT', 'FAGI_TOTAL_2010', 'FAGI_MEDIAN_2010',
+       'FAGI_TOTAL_2013', 'FAGI_MEDIAN_2013', 'FAGI_TOTAL_2011',
+       'FAGI_MEDIAN_2011', 'FAGI_TOTAL_2012', 'FAGI_MEDIAN_2012',
+       'FAGI_TOTAL_2014', 'FAGI_MEDIAN_2014', 'FAGI_TOTAL_2015',
+       'FAGI_MEDIAN_2015', 'geometry_Tract', 'ward', ...]].groupby(by=['GEOID','year','name','population', 'poverty-rate', 'renter-occupied-households',
+       'pct-renter-occupied', 'median-gross-rent', 'median-household-income',
+       'median-property-value', 'rent-burden', 'pct-white', 'pct-af-am',
+       'pct-hispanic', 'pct-am-ind', 'pct-asian', 'pct-nh-pi', 'pct-multiple',
+       'pct-other', 'pct-non-white', 'eviction-filings', 'evictions',
+       'eviction-rate', 'eviction-filing-rate', 'low-flag', 'imputed',
+       'subbed', 'OBJECTID', 'TRACT', 'FAGI_TOTAL_2010', 'FAGI_MEDIAN_2010',
+       'FAGI_TOTAL_2013', 'FAGI_MEDIAN_2013', 'FAGI_TOTAL_2011',
+       'FAGI_MEDIAN_2011', 'FAGI_TOTAL_2012', 'FAGI_MEDIAN_2012',
+       'FAGI_TOTAL_2014', 'FAGI_MEDIAN_2014', 'FAGI_TOTAL_2015',
+       'FAGI_MEDIAN_2015', 'geometry_Tract', 'ward']).count().reset_index()
+    df_avg.rename(columns={'xyz':'XYZ'}, inplace=True)
+    return df_avg
