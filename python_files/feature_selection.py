@@ -1,3 +1,7 @@
+"""Module with feature selection functions"""
+
+import numpy as np
+
 def shrink(df):
     x_cols_shrink = ['GEOID','year','name','population', 'poverty-rate', 'renter-occupied-households', 'pct-renter-occupied', 'median-gross-rent', 
               'median-household-income','median-property-value','rent-burden','pct-white','pct-af-am','pct-hispanic','pct-am-ind','pct-asian',
@@ -51,7 +55,7 @@ def shrink(df):
 'Type',
 'ANC',
 'Total # Residential Units',
-'Total # Affordable Units',
+'% Affordable Units',
 'Total # of 3 bedroom+ units (Fam sized units)',
 'Ownership (rental vs. condo or mix)',
 'Affordability notes (What levels of AMI% are avail)',
@@ -117,7 +121,7 @@ def create_demo_col(df):
 'Type',
 'ANC',
 'Total # Residential Units',
-'Total # Affordable Units',
+'% Affordable Units',
 'Total # of 3 bedroom+ units (Fam sized units)',
 'Ownership (rental vs. condo or mix)',
 'Affordability notes (What levels of AMI% are avail)',
@@ -126,8 +130,9 @@ def create_demo_col(df):
 'CASE_ID_update']]
     return df
 
-def count_puds(df):
-    df_count = df[['GEOID','year','name','population', 'poverty-rate', 'renter-occupied-households',
+def agg_puds(df):
+    def count_puds(df):
+        df_count = df[['GEOID','year','name','population', 'poverty-rate', 'renter-occupied-households',
        'pct-renter-occupied', 'median-gross-rent', 'median-household-income',
        'median-property-value', 'rent-burden', 'pct-white', 'pct-af-am',
        'pct-hispanic', 'pct-am-ind', 'pct-asian', 'pct-nh-pi', 'pct-multiple',
@@ -148,14 +153,11 @@ def count_puds(df):
        'FAGI_MEDIAN_2011', 'FAGI_TOTAL_2012', 'FAGI_MEDIAN_2012',
        'FAGI_TOTAL_2014', 'FAGI_MEDIAN_2014', 'FAGI_TOTAL_2015',
        'FAGI_MEDIAN_2015', 'geometry_Tract', 'ward']).count().reset_index()
-    df_count.rename(columns={'PUD_NAME':'pud_count'}, inplace=True)
+        df_count.rename(columns={'PUD_NAME':'pud_count'}, inplace=True)
+        return df_count
     
-    return df_count
-
-# TODO: update above to agg_puds function by adding in below and then merging on index columns
-
-def avg_puds(df):
-    df_avg = df[['GEOID','year','name','population', 'poverty-rate', 'renter-occupied-households',
+    def avg_puds(df):
+        df_avg = df[['GEOID','year','name','population', 'poverty-rate', 'renter-occupied-households',
        'pct-renter-occupied', 'median-gross-rent', 'median-household-income',
        'median-property-value', 'rent-burden', 'pct-white', 'pct-af-am',
        'pct-hispanic', 'pct-am-ind', 'pct-asian', 'pct-nh-pi', 'pct-multiple',
@@ -165,7 +167,7 @@ def avg_puds(df):
        'FAGI_TOTAL_2013', 'FAGI_MEDIAN_2013', 'FAGI_TOTAL_2011',
        'FAGI_MEDIAN_2011', 'FAGI_TOTAL_2012', 'FAGI_MEDIAN_2012',
        'FAGI_TOTAL_2014', 'FAGI_MEDIAN_2014', 'FAGI_TOTAL_2015',
-       'FAGI_MEDIAN_2015', 'geometry_Tract', 'ward', ...]].groupby(by=['GEOID','year','name','population', 'poverty-rate', 'renter-occupied-households',
+       'FAGI_MEDIAN_2015', 'geometry_Tract', 'ward', '% Affordable Units']].groupby(by=['GEOID','year','name','population', 'poverty-rate', 'renter-occupied-households',
        'pct-renter-occupied', 'median-gross-rent', 'median-household-income',
        'median-property-value', 'rent-burden', 'pct-white', 'pct-af-am',
        'pct-hispanic', 'pct-am-ind', 'pct-asian', 'pct-nh-pi', 'pct-multiple',
@@ -175,6 +177,8 @@ def avg_puds(df):
        'FAGI_TOTAL_2013', 'FAGI_MEDIAN_2013', 'FAGI_TOTAL_2011',
        'FAGI_MEDIAN_2011', 'FAGI_TOTAL_2012', 'FAGI_MEDIAN_2012',
        'FAGI_TOTAL_2014', 'FAGI_MEDIAN_2014', 'FAGI_TOTAL_2015',
-       'FAGI_MEDIAN_2015', 'geometry_Tract', 'ward']).count().reset_index()
-    df_avg.rename(columns={'xyz':'XYZ'}, inplace=True)
-    return df_avg
+       'FAGI_MEDIAN_2015', 'geometry_Tract', 'ward']).mean().reset_index()
+        df_avg['% Affordable Units'] = df_avg['% Affordable Units'].replace(np.nan, 0)
+        return df_avg
+    
+    return count_puds(df).merge(avg_puds(df))

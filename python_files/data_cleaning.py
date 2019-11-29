@@ -124,7 +124,7 @@ def clean_master_puds(df):
 'Type',
 'ANC',
 'Total # Residential Units',
-'Total # Affordable Units',
+'% Affordable Units',
 'Total # of 3 bedroom+ units (Fam sized units)',
 'Ownership (rental vs. condo or mix)',
 'Affordability notes (What levels of AMI% are avail)',
