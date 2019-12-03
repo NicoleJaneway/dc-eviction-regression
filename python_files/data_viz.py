@@ -36,11 +36,22 @@ def pud_count_by_type(x=6,y=3):
     ax.set_ylabel('Count of PUDs', size=14);
     return plt.show();
 
-def pud_count_by_type(x=6,y=3):
+def affordable_units_count(x=6,y=3):
     """Returns bar graph of PUD count by zoning type"""
     plt.figure(figsize=(x,y))
-    ax = sns.countplot(x=puds.Zone_Cat,palette=sns.diverging_palette(10, 220, sep=80, n=3, center="dark"));
-    ax.set_title('Count by PUD Zoning Category');
-    ax.set_xlabel("");
-    ax.set_ylabel('Count of PUDs', size=14);
+    ax = sns.countplot(viz0['bin2'], order=['0%','0-25%','25-100%'], palette=sns.diverging_palette(10, 220, sep=80, n=3, center='dark'))
+    ax.set_ylabel('Count of PUDs');
+    ax.set_xlabel('');
+    ax.set_title('Affordable Units out of Total Units');
     return plt.show();
+
+def lin_reg_puds(x=6,y=3):
+    plt.figure(figsize=(x,y))
+    ax = sns.regplot(x='pud_count', y=outcome, data=minipuds, color='gray', marker='.');
+    plt.title('Plot of PUDs against Eviction Rate');
+    ax.set_xlabel('Count of Puds by Block Group', size=14);
+    ax.set_ylabel('Eviction Rate (%)', size=14);
+    return plt.show();
+
+
+
