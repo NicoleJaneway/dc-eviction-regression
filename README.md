@@ -8,7 +8,7 @@ Nicole Bills (@NicoleJaneway)
 
 Goals:
  - 
- The goal of this analysis is to gain a better understanding of the relationship between Planned Unit Developments (PUDs) and eviction rates in Washington, D.C.
+ The goal of this analysis is to gain a better understanding of the relationship between Planned Unit Developments (PUDs), demographic factors, and eviction rates in Washington, D.C.
  
  
 Summary and Links to Files:
