@@ -1,5 +1,5 @@
 
-Title: Capital Evictions: Impact of development on eviction rates in Washington D.C.
+Capital Evictions: Impact of development on eviction rates in Washington D.C.
  - 
 
 Contributors:
@@ -13,15 +13,9 @@ Goals:
  
 Summary and Links to Files:
  - 
- - <a href='https://github.com/acl2171/eviction-tests/blob/master/Slidedeck.pdf'>SlideDeck (pdf)</a>
- - <a href='https://github.com/acl2171/eviction-tests/tree/master/data'>Data Sources</a>
-    - Final dataset: <a href = 'https://github.com/acl2171/eviction-tests/blob/master/data/cleaned_for_testing.csv'>cleaned_for_testing </a>
- - <a href = 'https://github.com/acl2171/eviction-tests/tree/master/notebooks'>Notebooks</a>
-    - <a href = 'https://github.com/acl2171/eviction-tests/blob/master/notebooks/technical_notebook.ipynb'>Technical Notebook</a>
-    - <a href = 'https://github.com/acl2171/eviction-tests/blob/master/notebooks/EDA4.ipynb'>Exploratory Data Analysis</a>
- - <a href='https://github.com/acl2171/eviction-tests/tree/master/python_files'>Python files</a>
-    - <a href = 'https://github.com/acl2171/eviction-tests/blob/master/python_files/data_cleaning.py'>Data Cleaning</a>
-    - <a href = 'https://github.com/acl2171/eviction-tests/blob/master/python_files/hypothesis_tests.py'>Hypothesis Tests</a>
-    - <a href = 'https://github.com/acl2171/eviction-tests/blob/master/python_files/visualizations.py'>Visualizations</a>
-
- 
+ - <a href='https://github.com/NicoleJaneway/dc_eviction_regression/blob/master/slide_deck.pdf'>Slide Deck (pdf)</a>
+ - <a href='https://github.com/NicoleJaneway/dc_eviction_regression/tree/master/data'>Data Sources</a>
+    - Final dataset: <a href = 'https://github.com/NicoleJaneway/dc_eviction_regression/blob/master/data/final_datasets/master_puds_blocks.csv'>master_puds_blocks.csv</a>
+ - <a href = 'https://github.com/NicoleJaneway/dc_eviction_regression/tree/master/notebooks'>Notebooks</a>
+    - <a href = 'https://github.com/NicoleJaneway/dc_eviction_regression/blob/master/technical_notebook.ipynb'>Technical Notebook</a>
+ - <a href='https://github.com/NicoleJaneway/dc_eviction_regression/tree/master/python_files'>Python files</a>
