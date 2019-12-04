@@ -4,7 +4,7 @@ Capital Evictions: Impact of development on eviction rates in Washington D.C.
 
 Contributors:
  - 
- - Nicole Bills (@NicoleJaneway)
+Nicole Bills (@NicoleJaneway)
 
 Goals:
  - 
