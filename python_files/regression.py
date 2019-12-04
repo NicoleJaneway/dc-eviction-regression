@@ -124,7 +124,7 @@ def lin_reg(X,y,X_labels=[]):
 def residual_checks(X,y):
     X_labels = [el for el in range(X.shape[-1])]
 
-    model, results, result_m_e, summary = lin_reg(X,y,X_labels)
+    model, results_model, results, result_m_e, summary = lin_reg(X,y,X_labels)
     
     name = ['Jarque-Bera', 'p-value', 'Skew', 'Kurtosis']
     test = sms.jarque_bera(results);
