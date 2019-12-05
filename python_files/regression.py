@@ -5,6 +5,7 @@ import seaborn as sns
 import pandas as pd
 from scipy import stats
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 import statsmodels.api as sm
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -48,13 +49,16 @@ def segment_test_data(X, y, split=0.1):
     return X_train, X_test, y_train, y_test
 
 
-def log_and_scale(X_train, y_train):
-    scaler = StandardScaler()
-    X_train = X_train.transform(lambda x: np.log(x + 1))
-    X_train = scaler.fit_transform(X_train)
-    y_train = y_train.transform(lambda x: np.log(x + 1))
-    y_train = scaler.fit_transform(np.array(y_train).reshape(-1, 1))
-    return X_train, y_train
+def log_and_scale(df):
+    assert type(df) == pd.core.frame.DataFrame,"Input is not a dataframe"
+    scaler = MinMaxScaler()
+    df = df.transform(lambda x: np.log(x + 1))
+    if df.shape[-1] == 1:
+        df = np.array(df).reshape(-1, 1)
+    else:
+        df = np.array(df)
+    df = scaler.fit_transform(df)
+    return df
         
 
 def transform_arrays_to_df(X_train, y_train, X_labels, y_labels='eviction-rate'):
@@ -64,12 +68,28 @@ def transform_arrays_to_df(X_train, y_train, X_labels, y_labels='eviction-rate')
     y.columns = [y_labels]
     return X, y
 
-def feature_histogram(X, y):
+def feature_histogram(X, y=None):
     """Display grid of features' distributions"""
     sns.set_context('notebook')
     scaled = pd.concat([X, y], axis=1)
     pd.DataFrame(scaled).hist(figsize  = [12, 12], color='gray'); 
     plt.subplots_adjust(wspace=.5, hspace=.5)
+    return plt.show();
+
+def feature_bar_chart(result, X_labels):
+    X_labels.insert(0,'intercept')
+    viz0 = pd.DataFrame(result.params)
+    viz0.columns = ['coef']
+    sns.set_context('talk')
+    viz0['col_names'] = X_labels
+    viz0['coef_transformed'] = viz0['coef'].map(lambda x: abs(x))
+    viz0.sort_values(by='coef_transformed', ascending=False, inplace=True)
+    viz0['color'] = viz0['coef'].map(lambda x: "'gray'" if x > 0 else "'blue'")
+    ax = sns.barplot(x=viz0['col_names'], y=viz0['coef_transformed'], color='grey');
+    plt.xticks(rotation=90, size=12);
+    ax.set_xlabel('Columns', size=14);
+    ax.set_ylabel('Coefficient', size=14);
+    ax.set_title('Relative Importance of Features');
     return plt.show();
 
 def multicolinearity_check1(X):
@@ -100,11 +120,15 @@ def multicolinearity_check(X):
     
     return plt.show(); 
 
-def big_lin_reg(X,y,X_labels):
+def lin_reg(X,y):
     """Fits linear regression model"""
-    X = sm.add_constant(X)
     model = sm.OLS(y, X, hasconst=True )
     result = model.fit()
+    return model, result
+
+def create_summary(result,X_labels=[],X=None):
+    if X_labels == []:
+        X_labels = [el for el in range(len(X))]
     labels = ['intercept'] + X_labels
     return result.summary(xname=labels)
 
@@ -119,23 +143,18 @@ def big_lin_reg(X,y,X_labels):
 #         plt.subplots_adjust(wspace=.5, hspace=.5);
 #     return plt.show();
 
-def big_lin_reg_return_residuals(X,y):
-    X = sm.add_constant(X)
-    model = sm.OLS(y, X, hasconst=True )
-    result = model.fit()
-    return result.resid, result.model.exog
-
-    
 def residual_checks(X,y):
-    results, result_m_e = big_lin_reg_return_residuals(X,y)
+    X_labels = [el for el in range(X.shape[-1])]
+
+    model, result = lin_reg(X,y)
     
     name = ['Jarque-Bera', 'p-value', 'Skew', 'Kurtosis']
-    test = sms.jarque_bera(results);
+    test = sms.jarque_bera(result.resid);
     [print('Tests of normality of residuals:')]
     [print("   - "+str(el[0])+": "+str(round(el[1],3))) for el in list(zip(name, test))];
     name = ['Lagrange multiplier statistic', 'p-value',
         'f-value', 'f p-value']
-    test = sms.het_breuschpagan(results, result_m_e);
+    test = sms.het_breuschpagan(result.resid, result.model.exog);
     [print("\n")]
     [print('Tests of heteroskedasticty of residuals:')]
     [print("   - "+str(el[0])+": "+str(round(el[1],3))) for el in list(zip(name, test))];
@@ -155,5 +174,73 @@ def residual_plot(X,y):
     ax.set_ylabel('Eviction Value', size=14);
     return plt.show();
 
-    
-    
+import statsmodels.api as sm
+
+def stepwise_selection(X, y, 
+                       initial_list=[], 
+                       threshold_in=0.01, 
+                       threshold_out = 0.05, 
+                       verbose=True):
+    """ Perform a forward-backward feature selection 
+    based on p-value from statsmodels.api.OLS
+    Arguments:
+        X - pandas.DataFrame with candidate features
+        y - list-like with the target
+        initial_list - list of features to start with (column names of X)
+        threshold_in - include a feature if its p-value < threshold_in
+        threshold_out - exclude a feature if its p-value > threshold_out
+        verbose - whether to print the sequence of inclusions and exclusions
+    Returns: list of selected features 
+    Always set threshold_in < threshold_out to avoid infinite looping.
+    See https://en.wikipedia.org/wiki/Stepwise_regression for the details
+    """
+    included = list(initial_list)
+    while True:
+        changed=False
+        # forward step
+        excluded = list(set(X.columns)-set(included))
+        new_pval = pd.Series(index=excluded)
+        for new_column in excluded:
+            model = sm.OLS(y, sm.add_constant(pd.DataFrame(X[included+[new_column]]))).fit()
+            new_pval[new_column] = model.pvalues[new_column]
+        best_pval = new_pval.min()
+        if best_pval < threshold_in:
+            best_feature = new_pval.idxmin()
+            included.append(best_feature)
+            changed=True
+            if verbose:
+                print('Add  {:30} with p-value {:.6}'.format(best_feature, best_pval))
+
+        # backward step
+        model = sm.OLS(y, sm.add_constant(pd.DataFrame(X[included]))).fit()
+        # use all coefs except intercept
+        pvalues = model.pvalues.iloc[1:]
+        worst_pval = pvalues.max() # null if pvalues is empty
+        if worst_pval > threshold_out:
+            changed=True
+            worst_feature = pvalues.argmax()
+            included.remove(worst_feature)
+            if verbose:
+                print('Drop {:30} with p-value {:.6}'.format(worst_feature, worst_pval))
+        if not changed:
+            break
+    return included    
+
+
+def create_values_table(X, X_var, y, y_hat):
+    values_table = pd.concat([X['pct-white'], y['eviction-rate'].reset_index(), pd.DataFrame(y_hat)], axis=1)
+    values_table.drop('index', axis=1, inplace=True)
+    values_table.columns = [X_var, 'y', 'y_hat']
+    values_table['residual'] = (values_table['y']-values_table['y_hat'])
+    return values_table
+
+def y_vs_y_hat_scatter(x, y, y_hat):
+    fig, ax = plt.subplots(sharey=True)
+    sns.scatterplot(x=x, y=y,color='gray', label='Actual');
+    sns.scatterplot(x=x, y=y_hat,color='blue', marker='.', label='Predicted');
+    ax.set_title('Plot of Results')
+    ax.set_ylabel('Eviction Rates (%)', size=14)
+    ax.set_xlabel('White Population (%)', size=14)
+    plt.legend(bbox_to_anchor=(1.02,1.05), loc="upper left", prop={'size': 12})
+    return plt.show();
+
