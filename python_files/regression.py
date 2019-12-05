@@ -5,6 +5,7 @@ import seaborn as sns
 import pandas as pd
 from scipy import stats
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 import statsmodels.api as sm
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -48,13 +49,16 @@ def segment_test_data(X, y, split=0.1):
     return X_train, X_test, y_train, y_test
 
 
-def log_and_scale(X_train, y_train):
-    scaler = StandardScaler()
-    X_train = X_train.transform(lambda x: np.log(x + 1))
-    X_train = scaler.fit_transform(X_train)
-    y_train = y_train.transform(lambda x: np.log(x + 1))
-    y_train = scaler.fit_transform(np.array(y_train).reshape(-1, 1))
-    return X_train, y_train
+def log_and_scale(df):
+    assert type(df) == pd.core.frame.DataFrame,"Input is not a dataframe"
+    scaler = MinMaxScaler()
+    df = df.transform(lambda x: np.log(x + 1))
+    if df.shape[-1] == 1:
+        df = np.array(df).reshape(-1, 1)
+    else:
+        df = np.array(df)
+    df = scaler.fit_transform(df)
+    return df
         
 
 def transform_arrays_to_df(X_train, y_train, X_labels, y_labels='eviction-rate'):
@@ -64,12 +68,28 @@ def transform_arrays_to_df(X_train, y_train, X_labels, y_labels='eviction-rate')
     y.columns = [y_labels]
     return X, y
 
-def feature_histogram(X, y):
+def feature_histogram(X, y=None):
     """Display grid of features' distributions"""
     sns.set_context('notebook')
     scaled = pd.concat([X, y], axis=1)
     pd.DataFrame(scaled).hist(figsize  = [12, 12], color='gray'); 
     plt.subplots_adjust(wspace=.5, hspace=.5)
+    return plt.show();
+
+def feature_bar_chart(result, X_labels):
+    X_labels.insert(0,'intercept')
+    viz0 = pd.DataFrame(result.params)
+    viz0.columns = ['coef']
+    sns.set_context('talk')
+    viz0['col_names'] = X_labels
+    viz0['coef_transformed'] = viz0['coef'].map(lambda x: abs(x))
+    viz0.sort_values(by='coef_transformed', ascending=False, inplace=True)
+    viz0['color'] = viz0['coef'].map(lambda x: "'gray'" if x > 0 else "'blue'")
+    ax = sns.barplot(x=viz0['col_names'], y=viz0['coef_transformed'], color='grey');
+    plt.xticks(rotation=90, size=12);
+    ax.set_xlabel('Columns', size=14);
+    ax.set_ylabel('Coefficient', size=14);
+    ax.set_title('Relative Importance of Features');
     return plt.show();
 
 def multicolinearity_check1(X):
@@ -100,15 +120,17 @@ def multicolinearity_check(X):
     
     return plt.show(); 
 
-def lin_reg(X,y,X_labels=[]):
+def lin_reg(X,y):
     """Fits linear regression model"""
-    X = sm.add_constant(X)
     model = sm.OLS(y, X, hasconst=True )
     result = model.fit()
+    return model, result
+
+def create_summary(result,X_labels=[],X=None):
     if X_labels == []:
         X_labels = [el for el in range(len(X))]
     labels = ['intercept'] + X_labels
-    return model, result, result.resid, result.model.exog, result.summary(xname=labels)
+    return result.summary(xname=labels)
 
 # def residual_check1(X,y):
 #     sns.set_context('talk')
@@ -124,15 +146,15 @@ def lin_reg(X,y,X_labels=[]):
 def residual_checks(X,y):
     X_labels = [el for el in range(X.shape[-1])]
 
-    model, results_model, results, result_m_e, summary = lin_reg(X,y,X_labels)
+    model, result = lin_reg(X,y)
     
     name = ['Jarque-Bera', 'p-value', 'Skew', 'Kurtosis']
-    test = sms.jarque_bera(results);
+    test = sms.jarque_bera(result.resid);
     [print('Tests of normality of residuals:')]
     [print("   - "+str(el[0])+": "+str(round(el[1],3))) for el in list(zip(name, test))];
     name = ['Lagrange multiplier statistic', 'p-value',
         'f-value', 'f p-value']
-    test = sms.het_breuschpagan(results, result_m_e);
+    test = sms.het_breuschpagan(result.resid, result.model.exog);
     [print("\n")]
     [print('Tests of heteroskedasticty of residuals:')]
     [print("   - "+str(el[0])+": "+str(round(el[1],3))) for el in list(zip(name, test))];
@@ -203,4 +225,22 @@ def stepwise_selection(X, y,
         if not changed:
             break
     return included    
-    
+
+
+def create_values_table(X, X_var, y, y_hat):
+    values_table = pd.concat([X['pct-white'], y['eviction-rate'].reset_index(), pd.DataFrame(y_hat)], axis=1)
+    values_table.drop('index', axis=1, inplace=True)
+    values_table.columns = [X_var, 'y', 'y_hat']
+    values_table['residual'] = (values_table['y']-values_table['y_hat'])
+    return values_table
+
+def y_vs_y_hat_scatter(x, y, y_hat):
+    fig, ax = plt.subplots(sharey=True)
+    sns.scatterplot(x=x, y=y,color='gray', label='Actual');
+    sns.scatterplot(x=x, y=y_hat,color='blue', marker='.', label='Predicted');
+    ax.set_title('Plot of Results')
+    ax.set_ylabel('Eviction Rates (%)', size=14)
+    ax.set_xlabel('White Population (%)', size=14)
+    plt.legend(bbox_to_anchor=(1.02,1.05), loc="upper left", prop={'size': 12})
+    return plt.show();
+
