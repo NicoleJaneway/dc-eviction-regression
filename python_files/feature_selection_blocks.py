@@ -1,6 +1,9 @@
 """Module with feature selection functions"""
 
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 
 def shrink(df):
     x_cols_shrink = ['GEOID','year','name','population', 'poverty-rate', 'renter-occupied-households', 'pct-renter-occupied', 'median-gross-rent', 
@@ -106,13 +109,13 @@ def agg_puds(df):
        'pct-renter-occupied', 'median-gross-rent', 'median-household-income',
        'median-property-value', 'rent-burden', 'pct-white', 'pct-af-am',
        'pct-hispanic', 'pct-am-ind', 'pct-asian', 'pct-nh-pi', 'pct-multiple',
-       'pct-other', 'pct-non-white', 'eviction-filings', 'evictions',
+       'pct-other', 'eviction-filings', 'evictions',
        'eviction-rate', 'eviction-filing-rate', 'low-flag', 'imputed',
        'subbed', 'ward', 'PUD_NAME']].groupby(by=['GEOID','year','name','population', 'poverty-rate', 'renter-occupied-households',
        'pct-renter-occupied', 'median-gross-rent', 'median-household-income',
        'median-property-value', 'rent-burden', 'pct-white', 'pct-af-am',
        'pct-hispanic', 'pct-am-ind', 'pct-asian', 'pct-nh-pi', 'pct-multiple',
-       'pct-other', 'pct-non-white', 'eviction-filings', 'evictions',
+       'pct-other', 'eviction-filings', 'evictions',
        'eviction-rate', 'eviction-filing-rate', 'low-flag', 'imputed',
        'subbed', 'ward']).count().reset_index()
         df_count.rename(columns={'PUD_NAME':'pud_count'}, inplace=True)
@@ -123,16 +126,36 @@ def agg_puds(df):
        'pct-renter-occupied', 'median-gross-rent', 'median-household-income',
        'median-property-value', 'rent-burden', 'pct-white', 'pct-af-am',
        'pct-hispanic', 'pct-am-ind', 'pct-asian', 'pct-nh-pi', 'pct-multiple',
-       'pct-other', 'pct-non-white', 'eviction-filings', 'evictions',
+       'pct-other', 'eviction-filings', 'evictions',
        'eviction-rate', 'eviction-filing-rate', 'low-flag', 'imputed',
        'subbed', 'ward', '% Affordable Units']].groupby(by=['GEOID','year','name','population', 'poverty-rate', 'renter-occupied-households',
        'pct-renter-occupied', 'median-gross-rent', 'median-household-income',
        'median-property-value', 'rent-burden', 'pct-white', 'pct-af-am',
        'pct-hispanic', 'pct-am-ind', 'pct-asian', 'pct-nh-pi', 'pct-multiple',
-       'pct-other', 'pct-non-white', 'eviction-filings', 'evictions',
+       'pct-other', 'eviction-filings', 'evictions',
        'eviction-rate', 'eviction-filing-rate', 'low-flag', 'imputed',
        'subbed', 'ward']).mean().reset_index()
         df_avg['% Affordable Units'] = df_avg['% Affordable Units'].replace(np.nan, 0)
         return df_avg
     
     return count_puds(df).merge(avg_puds(df))
+
+def chart_of_affordable_housing(x1, x2, y):
+    ax = sns.scatterplot(x = x1, 
+                    y = y, 
+                    hue = [0 if el == 0 else 1 for el in x2], 
+                palette=(sns.diverging_palette(10, 220, sep=80, n=2)), markers='.', alpha=.8)
+    plt.legend(bbox_to_anchor=(1.02,1.05), loc="upper left", prop={'size': 12})
+    leg = ax.axes.get_legend()
+    # ax.legend()
+    new_labels = ['No Affordable Housing', 'Affordable Housing']
+    for t, l in zip(leg.texts, new_labels): t.set_text(l)
+    params = {'legend.fontsize': 10}
+    plt.rcParams.update(params)
+    ax.set_xlabel('Count of Puds by Block Group', size=14);
+    ax.set_ylabel('Eviction Rate (%)', size=14);
+    ax.set_title('Plot of Affordable Housing', size=16)
+    plt.xticks(size=14)
+    plt.yticks(size=14)
+    return plt.show()
+
