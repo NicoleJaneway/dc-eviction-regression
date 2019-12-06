@@ -6,11 +6,16 @@ import pandas as pd
 from scipy import stats
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.linear_model import Lasso, LinearRegression
 import statsmodels.api as sm
 import numpy as np
 from sklearn.model_selection import train_test_split
 import statsmodels.formula.api as smf
 import statsmodels.stats.api as sms
+import statsmodels.api as sm
+from sklearn.metrics import mean_squared_error
+
+
 
 def shrink_data(df):
     """Creates dataframe with continuous columns"""
@@ -43,24 +48,6 @@ def drop_outliers(df):
     y = pd.DataFrame(puds_cleaned['eviction-rate'])
     return X, y
 
-def segment_test_data(X, y, split=0.1):
-    """Creates train test split and conducts log and scaler transformation on training data""" 
-    X_train , X_test, y_train, y_test = train_test_split(X, y, test_size=split, random_state=12)
-    return X_train, X_test, y_train, y_test
-
-
-def log_and_scale(df):
-    assert type(df) == pd.core.frame.DataFrame,"Input is not a dataframe"
-    scaler = MinMaxScaler()
-    df = df.transform(lambda x: np.log(x + 1))
-    if df.shape[-1] == 1:
-        df = np.array(df).reshape(-1, 1)
-    else:
-        df = np.array(df)
-    df = scaler.fit_transform(df)
-    return df
-        
-
 def transform_arrays_to_df(X_train, y_train, X_labels, y_labels='eviction-rate'):
     X = pd.DataFrame(X_train)
     y = pd.DataFrame(y_train)
@@ -77,11 +64,12 @@ def feature_histogram(X, y=None):
     return plt.show();
 
 def feature_bar_chart(result, X_labels):
-    X_labels.insert(0,'intercept')
+    X_labels_copy = X_labels
+    X_labels_copy.insert(0,'intercept')
     viz0 = pd.DataFrame(result.params)
     viz0.columns = ['coef']
     sns.set_context('talk')
-    viz0['col_names'] = X_labels
+    viz0['col_names'] = X_labels_copy
     viz0['coef_transformed'] = viz0['coef'].map(lambda x: abs(x))
     viz0.sort_values(by='coef_transformed', ascending=False, inplace=True)
     viz0['color'] = viz0['coef'].map(lambda x: "'gray'" if x > 0 else "'blue'")
@@ -110,9 +98,6 @@ def multicolinearity_check1(X):
             ax.yaxis.labelpad = 50
     return plt.show();
 
-def multicolinearity_check2(X):
-    return X.corr()
-
 def multicolinearity_check(X):
     sns.set_context('notebook')
     fig = plt.figure(figsize=(12,10))
@@ -131,17 +116,6 @@ def create_summary(result,X_labels=[],X=None):
         X_labels = [el for el in range(len(X))]
     labels = ['intercept'] + X_labels
     return result.summary(xname=labels)
-
-# def residual_check1(X,y):
-#     sns.set_context('talk')
-#     fig = plt.figure(figsize=(8,20))
-#     for num in range(len(X.columns)):
-#         num += 1
-#         ax = fig.add_subplot((len(X.columns),1,num)
-#         num - = 1
-#         sns.residplot(x=X[num], y=Y, data=X, color='gray', scatter_kws={"s": 20});
-#         plt.subplots_adjust(wspace=.5, hspace=.5);
-#     return plt.show();
 
 def residual_checks(X,y):
     X_labels = [el for el in range(X.shape[-1])]
@@ -170,11 +144,10 @@ def residual_plot(X,y):
     ax = sns.residplot(x='poverty-rate', y=outcome, data=scaled, color='red', scatter_kws={"s": 20,'alpha': .3}, label='Poverty Rate');
     ax.legend()
     plt.legend(bbox_to_anchor=(1.02,1.05), loc="upper left", prop={'size': 12})
-    ax.set_xlabel('Feature Value', size=14);
+    ax.set_xlabel('Transformed Feature Value', size=14);
     ax.set_ylabel('Eviction Value', size=14);
     return plt.show();
 
-import statsmodels.api as sm
 
 def stepwise_selection(X, y, 
                        initial_list=[], 
@@ -226,7 +199,6 @@ def stepwise_selection(X, y,
             break
     return included    
 
-
 def create_values_table(X, X_var, y, y_hat):
     values_table = pd.concat([X['pct-white'], y['eviction-rate'].reset_index(), pd.DataFrame(y_hat)], axis=1)
     values_table.drop('index', axis=1, inplace=True)
@@ -244,3 +216,27 @@ def y_vs_y_hat_scatter(x, y, y_hat):
     plt.legend(bbox_to_anchor=(1.02,1.05), loc="upper left", prop={'size': 12})
     return plt.show();
 
+def lasso_regression(X_train, y_train, alpha):
+    #Fit the model
+    lasso = Lasso(alpha=alpha, max_iter=1e5)
+    lasso.fit(X_train, y_train)
+    y_pred = lasso.predict(X_train)
+    
+    #Return the result in pre-defined format
+    MSE = round(mean_squared_error(y_train, y_pred),2)
+    ret = [MSE]
+    ret.extend(lasso.intercept_)
+    ret.extend(lasso.coef_)
+    return ret
+
+def initialize_search(X_labels,alpha_lasso):
+    col = ['MSE','intercept'] + ['drop']+ X_labels 
+    ind = ['alpha_%.2g'%alpha_lasso[i] for i in range(len(alpha_lasso))]
+    coef_matrix_lasso = pd.DataFrame(index=ind, columns=col)
+    return coef_matrix_lasso
+
+def conduct_search(coef_matrix_lasso, X_train, y_train, alpha_lasso):
+    for i in range(len(alpha_lasso)):
+        coef_matrix_lasso.iloc[i,] = lasso_regression(X_train, y_train, alpha_lasso[i])
+    coef_matrix_lasso.drop('drop', axis=1, inplace=True)
+    return coef_matrix_lasso
