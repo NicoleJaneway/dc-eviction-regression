@@ -8,8 +8,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
+
 def years_dist(x=6,y=3):
     """Returns distribution of eviction rates for years active in Eviction Lab dataset"""
+    sns.set_context('notebook')
     evict = pd.read_csv('data/eviction_lab/csv/block-groups.csv')
     sns.set_palette(sns.color_palette("Blues_r", 8,))
     plt.figure(figsize=(x,y))
@@ -26,7 +28,7 @@ def years_dist(x=6,y=3):
     plt.title('Distribution of Eviction Rate by Year', size=16);
     ax.yaxis.set_visible(False);
     ax.set_xlabel('Eviction Rate (%)', size=14);
-    plt.show();
+    plt.xticks(size=14)
     return plt.show();
 
 def pud_count_by_type(x=6,y=3):
@@ -38,6 +40,10 @@ def pud_count_by_type(x=6,y=3):
     ax.set_title('Count by PUD Zoning Category', size=16);
     ax.set_xlabel("");
     ax.set_ylabel('Count of PUDs', size=12);
+    ax.text(.95, .95, 'n = 286',
+        verticalalignment='top', horizontalalignment='right',
+        transform=ax.transAxes,
+        fontsize=10)    
     return plt.show();
 
 def affordable_units_count(x=6,y=3):
@@ -77,6 +83,10 @@ def affordable_units_count(x=6,y=3):
     ax.set_xlabel('');
     ax.set_title('Affordable Units out of Total Units', size=16);
     plt.xticks(size=14)
+    ax.text(.95, .95, 'n = 72',
+        verticalalignment='top', horizontalalignment='right',
+        transform=ax.transAxes,
+        fontsize=10)
     return plt.show();
 
 def lin_reg_puds(x=6,y=3):

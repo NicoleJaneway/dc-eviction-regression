@@ -33,8 +33,7 @@ def shrink_data(df):
  'pct-am-ind',
  'pct-asian',
  'pct-nh-pi',
- 'pct-multiple',
- '% Affordable Units']
+ 'pct-multiple']
     puds_to_transform = df[x_cols_all]
     puds_to_transform = pd.concat([puds_to_transform,df['eviction-rate']],axis=1)
     puds_to_transform = puds_to_transform.fillna(0)
@@ -64,12 +63,11 @@ def feature_histogram(X, y=None):
     return plt.show();
 
 def feature_bar_chart(result, X_labels):
-    X_labels_copy = X_labels
-    X_labels_copy.insert(0,'intercept')
     viz0 = pd.DataFrame(result.params)
+    viz0.drop('const', inplace=True)
     viz0.columns = ['coef']
     sns.set_context('talk')
-    viz0['col_names'] = X_labels_copy
+    viz0['col_names'] = X_labels
     viz0['coef_transformed'] = viz0['coef'].map(lambda x: abs(x))
     viz0.sort_values(by='coef_transformed', ascending=False, inplace=True)
     viz0['color'] = viz0['coef'].map(lambda x: "'gray'" if x > 0 else "'blue'")
@@ -223,19 +221,20 @@ def lasso_regression(X_train, y_train, alpha):
     y_pred = lasso.predict(X_train)
     
     #Return the result in pre-defined format
-    MSE = round(mean_squared_error(y_train, y_pred),2)
+    MSE = mean_squared_error(y_train, y_pred)
     ret = [MSE]
     ret.extend(lasso.intercept_)
     ret.extend(lasso.coef_)
     return ret
 
 def initialize_search(X_labels,alpha_lasso):
-    col = ['MSE','intercept'] + ['drop']+ X_labels 
+    col = ['MSE','intercept'] + ['drop'] + X_labels 
     ind = ['alpha_%.2g'%alpha_lasso[i] for i in range(len(alpha_lasso))]
     coef_matrix_lasso = pd.DataFrame(index=ind, columns=col)
     return coef_matrix_lasso
 
 def conduct_search(coef_matrix_lasso, X_train, y_train, alpha_lasso):
+    X_train
     for i in range(len(alpha_lasso)):
         coef_matrix_lasso.iloc[i,] = lasso_regression(X_train, y_train, alpha_lasso[i])
     coef_matrix_lasso.drop('drop', axis=1, inplace=True)
