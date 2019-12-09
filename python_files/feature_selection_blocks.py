@@ -141,6 +141,7 @@ def agg_puds(df):
     return count_puds(df).merge(avg_puds(df))
 
 def chart_of_affordable_housing(x1, x2, y):
+    sns.set_context('talk')
     ax = sns.scatterplot(x = x1, 
                     y = y, 
                     hue = [0 if el == 0 else 1 for el in x2], 
