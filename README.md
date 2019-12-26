@@ -10,6 +10,12 @@ Goals:
  - 
  The goal of this analysis is to gain a better understanding of the relationship between Planned Unit Developments (PUDs), demographic factors, and eviction rates in Washington, D.C.
  
+ ![alt text](https://github.com/NicoleJaneway/dc_eviction_regression/blob/master/img/evictionlab.png "Eviction lab 2016 data")
+*Map from The Eviction Lab showcasing eviction rates in the Washington, D.C area. Block groups are shaded by the percent white population*
+
+
+ ![alt text](https://github.com/NicoleJaneway/dc_eviction_regression/blob/master/img/puds.png "PUDs in D.C.")
+*Google My Maps visualization of PUDs within D.C. Wards (https://bit.ly/2DRc011)*
  
 Summary and Links to Files:
  - 
